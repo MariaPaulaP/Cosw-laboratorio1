@@ -1,28 +1,195 @@
-# CoswAngularSeed
+Spring Boot - AngularJS Intro
+Introduction to Angular JS and Spring Boot.
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 1.2.7.
+Create a Spring Boot Project at Spring Intializer webstite with the following configuration:
+alt text
 
-## Development server
+Clone this repository, open the console and go to angular-seed folder
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The app will automatically reload if you change any of the source files.
+Install the node libraries with the following command:
 
-## Code scaffolding
+npm install
+Run the angular local server to test the base project and make sure the navigation works correctly:
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+npm start
+Create a folder called models. And then create a model class for the TODO object.
 
-## Build
+5.1) Navigate to the models folder and generate the TODO class with the following command:
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory. Use the `-prod` flag for a production build.
+ng g class todo
+5.2) Add the following attributes to the TODO model:
 
-## Running unit tests
+     export class Todo {
+         private description: string;
+         private priority: Number;
+         private completed: boolean;
+     
+         constructor(description: string, priority: Number = 1, completed: boolean = false) {
+             this.description = description;
+             this.completed = completed;
+             this.priority = priority;
+         }
+     }
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+Read about services in the Angular JS documentation site: https://angular.io/guide/architecture#services. Once you understand the concept of services then create a service that will handle the TODO objects:
 
-## Running end-to-end tests
+6.1) Create a folder called services.
 
-Run `ng e2e` to execute the end-to-end tests via [Protractor](http://www.protractortest.org/).
-Before running the tests make sure you are serving the app via `ng serve`.
+6.2) Navigate from the console to the services folder and generate the TODO service with the following command.
 
-## Further help
+ng g service todo --spec false
+6.3) Open the file todo.service.ts and check the content of the generated file.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI README](https://github.com/angular/angular-cli/blob/master/README.md).
+Create a mocked list of TODO objects in the todo.service.ts file:
+
+@Injectable()
+export class TodoService {
+  private todos: Todo[] = [
+      new Todo('todo 1'),
+      new Todo('todo 2', 1, true),
+      new Todo('todo 3')
+    ];
+
+Create a method that expose the mocked list of TODO objects:
+
+    constructor() {
+    
+      }
+    
+      list(): Todo[] {
+        return this.todos;
+      }      
+Register the todo.service as provided in the app.module.ts file:
+
+9.1) Import the service:
+
+import { TodoService } from './services/todo.service';
+
+9.2) Include the todo.service in the providers array of the app module:
+
+@NgModule({
+ declarations: [
+   AppComponent,
+   HomePageComponent,
+   TaskListPageComponent,
+   TaskEditPageComponent,
+   PageNotFoundComponent
+ ],
+ imports: [
+   BrowserModule,
+   NgbModule.forRoot(),
+   RouterModule.forRoot(ROUTES)
+ ],
+ providers: [TodoService],
+ bootstrap: [AppComponent]
+})
+export class AppModule { }
+
+Import and inject the todo.service in the task-list-page.components.ts:
+
+10.1) Import the TodoService and the model:
+
+import { TodoService } from '../../services/todo.service';
+import { Todo } from '../../models/todo';             
+10.1) Inject the TodoService in the component constructor:
+
+ constructor(public todoService: TodoService) {
+          
+            }
+Create a list of Todo Objects in the TaskListPageComponent:
+
+export class TaskListPageComponent implements OnInit {
+ private todos: Todo[] = [];
+Implement the ngOnInit method to initialize the Todo Objects list:
+
+ngOnInit() {
+    this.todos = this.todoService.list();
+  }
+Go to the view tasks-list-page.component.html and add the logic to display the list:
+
+<h2>Tasks</h2>
+<table class="table table-bordered">
+ <thead>
+   <tr>
+     <th>Description</th>
+     <th>Priority</th>
+     <th>Completed</th>
+   </tr>
+ </thead>
+ <tr *ngFor="let todo of todos">
+   <td>{{todo.description}}</td>
+   <td>{{todo.priority}}</td>
+   <td>{{todo.completed}}</td>
+ </tr>
+</table>
+Start the Angular server and verify that the lists of TODOs is shown correctly.
+
+Inject the Todo service in the TaskEditPageComponent.
+
+Create a form on the view task-edit-page-component.html to create a TODO object:
+
+<div class="container">
+  <h2>Edit Task</h2>
+  <form [formGroup]="todoForm" (ngSubmit)="onSubmit()" novalidate>
+    <div class="form-group">
+      <label for="description">Description</label>
+      <input type="text" class="form-control" id="description" formControlName="description" required>
+    </div>
+
+    <div class="form-group">
+      <label for="priority">Priority</label>
+      <input type="number" class="form-control" id="alterEgo" formControlName="priority">
+    </div>
+
+    <div class="form-group">
+      <label for="completed">Completed</label>
+      <input type="checkbox" class="form-control" id="completed" formControlName="completed">
+    </div>
+
+    <button type="submit" class="btn btn-success">Save</button>
+
+  </form>
+</div>
+Import the fromGroup class and formBuilder service on the task-edit-page.component.ts:
+
+import { FormGroup, FormBuilder } from '@angular/forms';
+Initialize the form on the task-edit-page.component.ts ngOnInit method:
+
+ngOnInit() {
+    this.todoForm = this.formBuilder.group({
+      description: '',
+      completed: '',
+      priority: ''
+    });
+  }
+Inject the router service on the task-edit-page.component.ts:
+
+import { Router } from '@angular/router';
+...
+constructor(
+    public todoService: TodoService,
+    public formBuilder: FormBuilder,
+    public router: Router,
+  ) {
+
+  }
+Implement the method onSubmit on the task-edit-page.component.ts:
+
+onSubmit() {
+   this.todoService.create(
+     this.todoForm.get('description').value,
+     this.todoForm.get('priority').value,
+     Boolean(this.todoForm.get('completed').value)
+   );
+
+   this.router.navigate(['/tasks']);
+ }
+Run the Angular server and verify that the add todo works.
+
+Part 2: Compile the angular project and include it on the Spring Boot server
+Compile the Angular project with the following command:
+
+npm run build
+Copy all the files contain in the anuglar-seed/dist folder of the resources/static folder in the SpringBoot project.
+
+Run the Spring Boot server from the console with ./gradlew bootRun and verify that project works.
